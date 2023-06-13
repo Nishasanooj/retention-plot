@@ -1,0 +1,66 @@
+DROP TABLE IF EXISTS q1;
+CREATE  TABLE q1 (
+id INT ,
+userid INT,
+total INT,
+created date
+)
+
+
+SELECT * FROM q1;
+
+COPY q1  FROM  'E:\Q1.csv' WITH  CSV HEADER;
+
+--*********************************************************** 
+
+
+--*********************************************************** 
+DROP TABLE IF EXISTS weekstart;
+CREATE TABLE weekstart AS 
+SELECT *, date(date_trunc('week',created)) AS startweek FROM q1
+
+SELECT * FROM weekstart;
+
+SELECT userid, count(startweek) FROM weekstart
+GROUP BY userid ORDER BY count(startweek) DESC
+
+--*******************
+
+DROP TABLE IF EXISTS grouped;
+CREATE TABLE grouped AS
+SELECT userid, min( startweek ) AS first_purchase FROM weekstart
+GROUP BY userid
+ORDER BY userid
+
+
+
+SELECT * FROM grouped; 
+
+--*********************************************************** 
+DROP TABLE IF EXISTS diff;
+CREATE TABLE diff AS 
+SELECT * FROM grouped JOIN weekstart USING(userid);
+
+SELECT * FROM diff;
+
+--*********************************************************** 
+DROP TABLE IF EXISTS final;
+CREATE TABLE final AS 
+SELECT userid ,first_purchase,startweek,created,(created-first_purchase)/7 AS weekdiff FROM diff
+ORDER BY userid;
+SELECT * FROM final
+ORDER BY userid,weekdiff;
+
+select first_purchase, 
+count(distinct case when weekdiff=0 then userid end )as week0,
+count(distinct case when weekdiff=1 then userid end )as week1,
+count(distinct case when weekdiff=2 then userid end )as week2,
+count(distinct case when weekdiff=3 then userid end )as week3,
+count(distinct case when weekdiff=4 then userid end )as week4,
+count(distinct case when weekdiff=5 then userid end )as week5,
+count(distinct case when weekdiff=6 then userid end )as week6,
+count(distinct case when weekdiff=7 then userid end )as week7,
+count(distinct case when weekdiff=8 then userid end )as week8,
+count(distinct case when weekdiff=9 then userid end )as week9,
+count(distinct case when weekdiff=10 then userid end )as week10
+from final group by first_purchase;
